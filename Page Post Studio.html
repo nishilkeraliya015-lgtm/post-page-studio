@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Page Post Studio</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800&family=Noto+Sans+Devanagari:wght@500;700;800&family=Noto+Sans+Gujarati:wght@500;700;800&display=swap">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#f6f7fb;--card:#fff;--tx:#1b1f2a;--mu:#667085;--bd:#e3e6ee;--ac:#1877f2}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12141a;--card:#1c1f28;--tx:#eceef3;--mu:#9aa1b2;--bd:#2c3040}}
+:root[data-theme="dark"]{--bg:#12141a;--card:#1c1f28;--tx:#eceef3;--mu:#9aa1b2;--bd:#2c3040}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.5}
+.wrap{max-width:960px;margin:0 auto;padding:16px}
+h1{font-size:22px;margin:8px 0 2px}h2{font-size:15px;margin:0 0 10px}
+.sub{color:var(--mu);margin:0 0 16px;font-size:14px}
+.panel,.post{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:16px;margin-bottom:12px}
+.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+label{font-size:12px;color:var(--mu);display:block;margin-bottom:4px}
+select,input[type=text],input:not([type]){width:100%;padding:10px;border-radius:10px;border:1px solid var(--bd);background:var(--bg);color:var(--tx);font-size:15px}
+input[type=color]{width:100%;height:42px;padding:2px;border-radius:10px;border:1px solid var(--bd);background:var(--bg)}
+button{cursor:pointer;border:0;border-radius:10px;padding:10px 14px;font-size:14px;font-weight:600;background:var(--ac);color:#fff}
+button.sec{background:transparent;color:var(--tx);border:1px solid var(--bd)}
+button:disabled{opacity:.5;cursor:wait}
+.go{margin-top:6px;width:100%;padding:13px;font-size:16px}
+.bar{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+#out{display:grid;gap:14px;margin-top:16px}
+.post{display:grid;grid-template-columns:minmax(0,300px) 1fr;gap:16px}
+@media (max-width:640px){.post{grid-template-columns:1fr}}
+canvas{width:100%;height:auto;border-radius:10px;display:block;border:1px solid var(--bd)}
+.idea{font-weight:700;margin:0 0 6px}
+textarea{width:100%;min-height:140px;padding:10px;border-radius:10px;border:1px solid var(--bd);background:var(--bg);color:var(--tx);font:inherit;font-size:14px;resize:vertical}
+.acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.msg{color:var(--mu);padding:12px 2px;font-size:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Page Post Studio</h1>
+  <p class="sub">Each page keeps its own brand style. Pick the page, tap Generate, get infographic posts.</p>
+
+  <div class="panel">
+    <h2>1. Page profile</h2>
+    <div class="row">
+      <div><label>Saved pages</label><select id="prof"></select></div>
+      <div><label>Page name</label><input id="name" placeholder="SAMAJH LO"></div>
+      <div><label>Footer line</label><input id="tag" placeholder="Follow for smart explainers"></div>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <div><label>Ink (text)</label><input type="color" id="ink" value="#171717"></div>
+      <div><label>Background</label><input type="color" id="paper" value="#f7f3ea"></div>
+      <div><label>Accent</label><input type="color" id="accent" value="#ff5a36"></div>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <div><label>Page type</label>
+        <select id="type">
+          <option>Educational explainers</option><option>Motivational</option><option>Food and recipes</option>
+          <option>Devotional / Religious</option><option>News explained</option><option>Fitness and health</option>
+          <option>Business and money tips</option><option>Travel</option><option>Movies and celebrities</option>
+          <option>General knowledge</option><option>Fashion and beauty</option><option>Memes / funny</option>
+          <option value="custom">Other (type below)…</option>
+        </select></div>
+      <div id="cw" style="display:none"><label>Your page type</label><input id="custom" placeholder="e.g. Cricket, Farming"></div>
+      <div><label>Language</label><select id="lang"><option>English</option><option selected>Hindi</option><option>Gujarati</option><option>Hinglish</option></select></div>
+      <div><label>Posts</label><select id="n"><option>3</option><option selected>4</option><option>6</option></select></div>
+    </div>
+    <div class="bar">
+      <button class="sec" id="save">Save this page</button>
+      <button class="sec" id="new">+ New page</button>
+      <button class="sec" id="del">Delete</button>
+    </div>
+  </div>
+
+  <button class="go" id="gen">2. Generate posts</button>
+  <div id="out"></div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const W=1080,H=1350,M=70;
+const FONT='"Plus Jakarta Sans","Noto Sans Devanagari","Noto Sans Gujarati",system-ui,sans-serif';
+const fontsReady=Promise.all(["500","700","800"].map(w=>document.fonts.load(w+" 30px 'Plus Jakarta Sans'","Aa")).concat(["Noto Sans Devanagari","Noto Sans Gujarati"].map(f=>document.fonts.load("700 30px '"+f+"'","अઅ")))).catch(()=>{});
+
+/* ---------- profiles ---------- */
+const DEF={id:"p0",name:"SAMAJH LO",tag:"Follow for smart explainers",ink:"#171717",paper:"#f7f3ea",accent:"#ff5a36",type:"Educational explainers",custom:"",lang:"Hindi"};
+let profs=[];
+function ld(){try{profs=JSON.parse(localStorage.getItem("fbp2")||"[]")}catch(e){profs=[]}if(!profs.length)profs=[{...DEF}]}
+function sv(){try{localStorage.setItem("fbp2",JSON.stringify(profs))}catch(e){}}
+function fill(){$("prof").innerHTML=profs.map(p=>`<option value="${p.id}">${p.name.replace(/</g,"")}</option>`).join("")}
+function load(id){const p=profs.find(x=>x.id===id)||profs[0];$("prof").value=p.id;
+  ["name","tag","ink","paper","accent","type","custom","lang"].forEach(k=>$(k).value=p[k]||"");
+  $("cw").style.display=$("type").value==="custom"?"block":"none"}
+function cur(){return{id:$("prof").value,name:$("name").value.trim()||"MY PAGE",tag:$("tag").value.trim(),ink:$("ink").value,paper:$("paper").value,accent:$("accent").value,type:$("type").value,custom:$("custom").value,lang:$("lang").value}}
+ld();fill();load(profs[0].id);
+$("prof").onchange=()=>load($("prof").value);
+$("type").onchange=()=>$("cw").style.display=$("type").value==="custom"?"block":"none";
+$("save").onclick=()=>{const c=cur();const i=profs.findIndex(p=>p.id===c.id);if(i>=0)profs[i]=c;else profs.push(c);sv();fill();$("prof").value=c.id;$("save").textContent="Saved ✓";setTimeout(()=>$("save").textContent="Save this page",1200)};
+$("new").onclick=()=>{const p={...DEF,id:"p"+Date.now(),name:"New Page",tag:""};profs.push(p);sv();fill();load(p.id)};
+$("del").onclick=()=>{if(profs.length<2)return;profs=profs.filter(p=>p.id!==$("prof").value);sv();fill();load(profs[0].id)};
+
+/* ---------- drawing ---------- */
+function wrapL(c,t,mw){const w=String(t||"").split(/\s+/),L=[];let l="";for(const x of w){const s=l?l+" "+x:x;if(c.measureText(s).width>mw&&l){L.push(l);l=x}else l=s}if(l)L.push(l);return L}
+function fit(c,t,mw,mh,st,mn,wt){let s=st,L;for(;s>=mn;s-=2){c.font=`${wt} ${s}px ${FONT}`;L=wrapL(c,t,mw);if(L.length*s*1.3<=mh)break}return{L,s:Math.max(s,mn)}}
+function put(c,f,x,y,col){c.font=`${f.w} ${f.s}px ${FONT}`;c.fillStyle=col;c.textBaseline="top";f.L.forEach((l,i)=>c.fillText(l,x,y+i*f.s*1.3))}
+function box(c,b,x,y,w,h){c.beginPath();c.roundRect(x,y,w,h,22);c.fillStyle=b.ink+"0D";c.fill();c.lineWidth=3;c.strokeStyle=b.ink;c.stroke();
+  c.beginPath();c.roundRect(x+3,y+4,w,h,22);c.lineWidth=1.5;c.strokeStyle=b.ink+"44";c.stroke()}
+function circ(c,b,x,y,r,n){c.beginPath();c.arc(x,y,r,0,7);c.fillStyle=b.accent;c.fill();c.fillStyle=b.paper;c.font=`800 ${r*1.0}px ${FONT}`;c.textAlign="center";c.textBaseline="middle";c.fillText(n,x,y+2);c.textAlign="left"}
+function arrow(c,b,x,y1,y2){c.strokeStyle=b.accent;c.fillStyle=b.accent;c.lineWidth=5;c.lineCap="round";c.beginPath();c.moveTo(x,y1);c.lineTo(x,y2-10);c.stroke();c.beginPath();c.moveTo(x-12,y2-14);c.lineTo(x+12,y2-14);c.lineTo(x,y2);c.fill()}
+function tblock(c,b,h,t,x,y,w,mh,hs,bs){ // heading + body, returns nothing; vertically centered in mh
+  const a=fit(c,h,w,hs*2.7,hs,Math.round(hs*.7),800);a.w=800;
+  const bh=mh-a.L.length*a.s*1.3-10;const d=fit(c,t,w,Math.max(bh,40),bs,Math.round(bs*.72),500);d.w=500;
+  const tot=a.L.length*a.s*1.3+10+d.L.length*d.s*1.3;let yy=y+Math.max(0,(mh-tot)/2);
+  put(c,a,x,yy,b.ink);put(c,d,x,yy+a.L.length*a.s*1.3+10,b.ink+"CC")}
+
+function render(cv,d,b){
+  cv.width=W;cv.height=H;const c=cv.getContext("2d");
+  c.fillStyle=b.paper;c.fillRect(0,0,W,H);
+  // header
+  c.beginPath();c.arc(M+10,M+12,10,0,7);c.fillStyle=b.accent;c.fill();
+  c.font=`800 28px ${FONT}`;c.fillStyle=b.ink;c.textBaseline="top";c.fillText(b.name.toUpperCase(),M+32,M-2);
+  // title
+  const t=fit(c,d.title,W-2*M,270,86,48,800);t.w=800;let y=M+60;put(c,t,M,y,b.ink);
+  y+=t.L.length*t.s*1.3;
+  c.font=`800 ${t.s}px ${FONT}`;const lw=Math.min(c.measureText(t.L[t.L.length-1]).width,520);
+  c.beginPath();c.moveTo(M,y+4);for(let i=1;i<=8;i++)c.lineTo(M+lw*i/8,y+4+(i%2?7:-3));c.lineWidth=8;c.lineCap="round";c.strokeStyle=b.accent;c.stroke();
+  y+=26;
+  const s=fit(c,d.subtitle||"",W-2*M,100,32,22,500);s.w=500;put(c,s,M,y,b.ink+"BB");y+=s.L.length*s.s*1.3+34;
+  // footer
+  const fy=H-96;c.fillStyle=b.ink;c.fillRect(M,fy,W-2*M,2);
+  c.font=`700 24px ${FONT}`;c.fillStyle=b.ink;c.textBaseline="top";c.fillText(b.name.toUpperCase()+(b.tag?"  •  "+b.tag:""),M,fy+24);
+  const bot=fy-30,avail=bot-y,P=d.points||[],n=P.length||1,iw=W-2*M;
+  if(d.layout==="compare"&&d.rows&&d.rows.length){
+    const R=d.rows.slice(0,4),g=26,cw=(iw-g)/2;
+    c.beginPath();c.roundRect(M,y,cw,66,33);c.fillStyle=b.ink;c.fill();c.beginPath();c.roundRect(M+cw+g,y,cw,66,33);c.fillStyle=b.accent;c.fill();
+    c.font=`800 30px ${FONT}`;c.fillStyle=b.paper;c.textAlign="center";c.textBaseline="middle";c.fillText(d.leftTitle||"",M+cw/2,y+35);c.fillText(d.rightTitle||"",M+cw+g+cw/2,y+35);c.textAlign="left";
+    y+=66+g;const bh=Math.min(250,(bot-y-g*(R.length-1))/R.length);
+    R.forEach((r,i)=>{const yy=y+i*(bh+g);[r.l,r.r].forEach((tx,k)=>{const x=M+k*(cw+g);box(c,b,x,yy,cw,bh);
+      const f=fit(c,tx,cw-50,bh-40,34,22,700);f.w=700;put(c,f,x+25,yy+(bh-f.L.length*f.s*1.3)/2,b.ink)})});
+  }else if(d.layout==="grid"&&n>1){
+    const g=30,rows=Math.ceil(n/2),bh=Math.min(400,(avail-g*(rows-1))/rows),cw=(iw-g)/2;
+    P.slice(0,6).forEach((p,i)=>{const r=Math.floor(i/2),k=i%2,last=i===n-1&&n%2===1,x=last?M:M+k*(cw+g),w=last?iw:cw,yy=y+r*(bh+g);
+      box(c,b,x,yy,w,bh);circ(c,b,x+50,yy+52,28,i+1);tblock(c,b,p.h,p.b,x+28,yy+96,w-56,bh-116,38,28)});
+  }else{
+    const g=46,bh=Math.min(260,(avail-g*(n-1))/n);
+    P.slice(0,5).forEach((p,i)=>{const yy=y+i*(bh+g);box(c,b,M,yy,iw,bh);circ(c,b,M+62,yy+bh/2,36,i+1);
+      tblock(c,b,p.h,p.b,M+132,yy+14,iw-132-30,bh-28,42,30);
+      if(i<n-1)arrow(c,b,M+62,yy+bh+6,yy+bh+g-4)});
+  }
+}
+
+/* ---------- generate ---------- */
+async function gen(){
+  const b=cur(),out=$("out"),btn=$("gen"),n=+$("n").value;
+  const t=b.type==="custom"?(b.custom||"General"):b.type;
+  out.innerHTML='<div class="msg">Generating posts…</div>';btn.disabled=true;
+  try{
+    const sample=await claude.use("sample");
+    if(!sample){out.innerHTML='<div class="msg">AI is not available in this view.</div>';return}
+    const prompt=`You create complete educational Facebook infographic posts for the page "${b.name}" (type: ${t}). Language for ALL text: ${b.lang} (Hindi/Gujarati in native script; Hinglish = Hindi in Roman letters). Tone: smart, youthful, approachable, trustworthy.
+Make ${n} DIFFERENT posts on trending/useful topics for this page type. Content must be fully written, correct and specific: no placeholders, no vague filler.
+Return ONLY a JSON array. Each item:
+{"idea":"topic in English","layout":"steps"|"grid"|"compare","title":"max 9 words","subtitle":"max 16 words","points":[{"h":"2-4 word heading","b":"one clear sentence, max 18 words"}],"leftTitle":"","rightTitle":"","rows":[{"l":"max 14 words","r":"max 14 words"}],"caption":"hook line, 2-4 short lines of value, a question to drive comments, 4-6 hashtags"}
+Rules: steps = 4 or 5 points (process or sequence); grid = 4 or 6 points (facts/tips); compare = 3 or 4 rows with leftTitle/rightTitle (myth vs fact, before vs after) and points empty. Mix layouts across posts. Do not copy copyrighted text.`;
+    const r=await sample.json(prompt,{cache:false});
+    const items=Array.isArray(r)?r:(r.posts||[]);
+    await fontsReady;out.innerHTML="";
+    items.forEach((d,i)=>{
+      const el=document.createElement("div");el.className="post";
+      const cv=document.createElement("canvas");
+      const rt=document.createElement("div");
+      const h=document.createElement("p");h.className="idea";h.textContent=(i+1)+". "+d.idea;
+      const ti=document.createElement("input");ti.value=d.title;ti.oninput=()=>{d.title=ti.value;render(cv,d,b)};ti.style.marginBottom="8px";
+      const ta=document.createElement("textarea");ta.value=d.caption;
+      const ac=document.createElement("div");ac.className="acts";
+      const cp=document.createElement("button");cp.textContent="Copy caption";
+      cp.onclick=async()=>{try{await navigator.clipboard.writeText(ta.value)}catch(e){ta.select();document.execCommand("copy")}cp.textContent="Copied ✓";setTimeout(()=>cp.textContent="Copy caption",1500)};
+      const dl=document.createElement("button");dl.className="sec";dl.textContent="Download image";
+      dl.onclick=async()=>{const D=await claude.use("downloads");if(!D){dl.textContent="Long-press image to save";return}
+        cv.toBlob(async bl=>{try{await D.save({filename:`${b.name.replace(/\W+/g,"-")}-${i+1}.png`,data:bl})}catch(e){}},"image/png")};
+      ac.append(cp,dl);rt.append(h,ti,ta,ac);el.append(cv,rt);out.append(el);render(cv,d,b);
+    });
+    if(!items.length)out.innerHTML='<div class="msg">No posts returned. Try again.</div>';
+  }catch(e){out.innerHTML='<div class="msg">Something went wrong ('+(e&&e.code||"error")+'). Please try again.</div>'}
+  finally{btn.disabled=false}
+}
+$("gen").onclick=gen;
+</script>
+</body>
+</html>
